@@ -29,6 +29,9 @@ d3.csv("data/2009.csv", function(data) {
             data[i].homeScore = parseInt(scores[0]);
             data[i].awayScore = parseInt(scores[1]);
             res.push(data[i]);
+            for(var name in data[i]){
+                console.log(data[i]['Home Team']);
+            }
         }
     }
     populate(res);
@@ -59,7 +62,7 @@ function redraw(){
     rects.enter()
         .append("rect")
         .attr("x",function(d,i){
-            return i*(w/dataset.length) + i*barpadd;
+            return i*(w/dataset.length);
         })
         .attr("y", function(d){
             if(d<0){
