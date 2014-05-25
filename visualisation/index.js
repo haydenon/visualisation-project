@@ -1,9 +1,14 @@
-var w = 1200;
-var h = 500;
+var w = window.innerWidth-40;
+var h = 550;
 var svg = d3.select("body")
 	.append("svg")
 	.attr("width", w)
 	.attr("height", h);
+window.onresize = function(event) {
+    w = window.innerWidth-40;
+    svg.attr("width",w)
+    change();
+};
 var aniDur = 800;
 
 var years = [2008,2009,2010,2011,2012,2013,'All']
@@ -167,6 +172,7 @@ function matchesFromYear(y){
 
 function winMatch(home){
 	return function(element){
+		//NEED TO DO SOMETHING ABOUT DRAW
 		return (element.homeWon && home) || (!home && !element.homeWon);
 	};
 }
@@ -261,6 +267,9 @@ function redraw(){
         .attr("x",function(d,i){
             return i*(w/teamWins.length);
         })
+        .attr("width", function(d,i){
+            return (w/teamWins.length) - barpad
+        })
         .attr("class",function(d){
         	return d.num>0 ? 'positive' : 'negative';
         });
@@ -291,4 +300,7 @@ function redraw(){
         .attr("x",function(d,i){
             return i*(w/teamWins.length);
         })
+        .attr("width",function(d,i){
+            return imgh;
+        });
 }
