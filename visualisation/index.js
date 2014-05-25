@@ -204,7 +204,8 @@ function redraw(){
     Array.max = function( array ){
             return Math.max.apply( Math, array );
         };
-    var highest = 20;//Array.max(teamWins);
+
+    var highest = 0;//Array.max(teamWins);
 
     teamWins.forEach(function(tws){
     	highest = highest>Math.abs(tws.wins) ? highest : Math.abs(tws.wins);
