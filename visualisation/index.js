@@ -1,6 +1,5 @@
-var w = 900;
-var h = 300;
-var bh = h/2;
+var w = 1200;
+var h = 500;
 var svg = d3.select("body")
 	.append("svg")
 	.attr("width", w)
@@ -190,25 +189,27 @@ function redraw(){
 			var wins = (hm.filter(winMatch(true)).length + am.filter(winMatch(false)).length);
 			var loses = (hm.length+am.length)-wins;
 			var tw = {
-				wins: wins - loses,
+				num: wins - loses,
 				team: t
 			};
 			teamWins.push(tw);
 		});
 		teamWins.sort(function(a,b){
-			return a.wins - b.wins
+			return a.num - b.num
 		});
 
 	//now draw
-	var barpadd = 1;
-    Array.max = function( array ){
-            return Math.max.apply( Math, array );
-        };
+	var barpad = 1;
+	var imgh = h/4
+	var img w = w/tws
+	var imgpad = 3;
+	var bh = (h-imgh)/2
+	var mh = (h-imgh)/2 + imgh;
 
     var highest = 0;//Array.max(teamWins);
 
     teamWins.forEach(function(tws){
-    	highest = highest>Math.abs(tws.wins) ? highest : Math.abs(tws.wins);
+    	highest = highest>Math.abs(tws.num) ? highest : Math.abs(tws.num);
     });
 
     var rects = svg.selectAll("rect")
@@ -221,37 +222,64 @@ function redraw(){
             return i*(w/teamWins.length);
         })
         .attr("y", function(d){
-            if(d.wins<0){
-                return bh;
+            if(d.num<0){
+                return mh;
             }
             else {
-                return Math.floor(bh - bh/highest*d.wins);
+                return Math.floor(mh - bh/highest*d.num);
             }
         })
         .attr("width", function(d,i){
-            return (w/teamWins.length) - barpadd
+            return (w/teamWins.length) - barpad
         })
         .attr("height", function(d){
-            return Math.floor(bh/highest*Math.abs(d.wins));
+            return Math.floor(bh/highest*Math.abs(d.num));
         })
         .attr("class",function(d){
-        	return d.wins>0 ? 'positive' : 'negative';
+        	return d.num>0 ? 'positive' : 'negative';
         });
     rects.transition().duration(800).attr("y", function(d){
-            if(d.wins<0){
-                return bh;
+            if(d.num<0){
+                return mh;
             }
             else {
-                return Math.floor(bh - bh/highest*d.wins);
+                return Math.floor(mh - bh/highest*d.num);
             }
         })
     	.attr("height", function(d){
-            return Math.floor(bh/highest*Math.abs(d.wins));
+            return Math.floor(bh/highest*Math.abs(d.num));
         })
         .attr("x",function(d,i){
             return i*(w/teamWins.length);
         })
         .attr("class",function(d){
-        	return d.wins>0 ? 'positive' : 'negative';
+        	return d.num>0 ? 'positive' : 'negative';
         });
+
+    var images = svg.selectAll("image")
+    	.data(teamWins, function(d){
+        	return d.team.names;
+        });
+	images.enter()
+		.append("image")
+		.attr("x",function(d,i){
+            return i*(w/teamWins.length);
+        })
+        .attr("y",function(d){
+            return 0;
+        })
+        .attr("width",function(d,i){
+            return 50;
+        })
+        .attr("height",function(d,i){
+            return 50;
+        })
+        .attr("xlink:href", function(d){
+        	return 'images/'+d.team.names+'.png';
+        });
+    images.transition()
+    	.duration(800)
+        .attr("x",function(d,i){
+            return i*(w/teamWins.length);
+        })
 }
