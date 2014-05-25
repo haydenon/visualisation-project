@@ -4,6 +4,7 @@ var svg = d3.select("body")
 	.append("svg")
 	.attr("width", w)
 	.attr("height", h);
+var aniDur = 800;
 
 var years = [2008,2009,2010,2011,2012,2013,'All']
 var opt = d3.select("body").select("select");
@@ -15,6 +16,9 @@ opt.selectAll("option")
 		return d;
 	});
 opt.on("change", change);
+
+countrySort = d3.select("body").select("input");
+countrySort.on("change",change);
 
 
 var aus = {};
@@ -173,6 +177,7 @@ function change(){
 }
 
 function redraw(){
+
 	var year = opt.property("value");
 		teamWins = [];
 		teams.teams.forEach(function(t){
@@ -195,6 +200,9 @@ function redraw(){
 			teamWins.push(tw);
 		});
 		teamWins.sort(function(a,b){
+			if(countrySort.property('checked')&& a.team.country != b.team.country){
+				return a.team.country == aus ? -1 : 1;
+			}
 			return a.num - b.num
 		});
 
@@ -239,7 +247,7 @@ function redraw(){
         .attr("class",function(d){
         	return d.num>0 ? 'positive' : 'negative';
         });
-    rects.transition().duration(800).attr("y", function(d){
+    rects.transition().duration(aniDur).attr("y", function(d){
             if(d.num<0){
                 return mh;
             }
@@ -279,7 +287,7 @@ function redraw(){
         	return 'images/'+d.team.names+'.png';
         });
     images.transition()
-    	.duration(800)
+    	.duration(aniDur)
         .attr("x",function(d,i){
             return i*(w/teamWins.length);
         })
