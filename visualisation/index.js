@@ -1,3 +1,11 @@
+var w = 900;
+var h = 300;
+var bh = h/2;
+var svg = d3.select("body")
+	.append("svg")
+	.attr("width", w)
+	.attr("height", h);
+
 var years = [2008,2009,2010,2011,2012,2013,'All']
 var opt = d3.select("body").select("select");
 opt.selectAll("option")
@@ -56,17 +64,13 @@ function createTeams(){
 var dataset;
 d3.csv("data/combined.csv", function(d) {
 	dataset=setupData(d);
-	redraw();
+	change();
 });
 
 function setupData(d){
 	var netballData = {};
 	netballData.venues = getVenues(d);
 	netballData.matches = getMatches(d, netballData.venues);
-	netballData.matches.matches.forEach(function(d){
-		if(d.year==2008)
-			console.log(d.draw+","+d.year+","+d.round+","+d.homeWon+","+d.homeScore+"-"+d.awayScore+","+d.homeTeam.names+","+d.awayTeam.names);
-	})
 	//NEED MAP FROM TEAM TO RESULTS. (IS THIS EVERY SEASON? HOW DO WE DO THAT?)
 	//netballData.teamsToResults = getTeamToResults(d);
 	//NEED MAP FROM TEAM TO RIVALS
@@ -135,7 +139,6 @@ function getMatches(d, venues){
 			awayScore: awayScore,
 			homeWon: homeWon
 		};
-		console.log(matchOb.homeTeam)
 		matches.push(matchOb);
 		yearMatches[year].push(matchOb);
 		homeTeam.homeMatches.push(matchOb);
@@ -153,28 +156,101 @@ function getTeamToResults(d){
 	});
 }
 
+function matchesFromYear(y){
+	return function(element){
+		return element.year == y;
+	};
+}
+
+function winMatch(home){
+	return function(element){
+		return (element.homeWon && home) || (!home && !element.homeWon);
+	};
+}
+
 function change(){
+	
 	redraw();
 }
 
 function redraw(){
-	var w = 900;
-	var h = 400;
-	var bh = h/2;
-	var svg = d3.select("body")
-		.append("svg")
-		.attr("width", w)
-		.attr("height", h);
 	var year = opt.property("value");
-	teamWins = [];
-	teams.teams.forEach(function(t){
-		var hm = [];
-		var am = [];
-		if(year=="All"){
-			
-		}
-		else{
+		teamWins = [];
+		teams.teams.forEach(function(t){
+			var hm = [];
+			var am = [];
+			if(year=="All"){
+				hm = t.homeMatches;
+				am = t.awayMatches;
+			}
+			else{
+				hm = t.homeMatches.filter(matchesFromYear(year));
+				am = t.awayMatches.filter(matchesFromYear(year));
+			}
+			var wins = (hm.filter(winMatch(true)).length + am.filter(winMatch(false)).length);
+			var loses = (hm.length+am.length)-wins;
+			var tw = {
+				wins: wins - loses,
+				team: t
+			};
+			teamWins.push(tw);
+		});
+		teamWins.sort(function(a,b){
+			return a.wins - b.wins
+		});
 
-		}
-	});
+	//now draw
+	var barpadd = 1;
+    Array.max = function( array ){
+            return Math.max.apply( Math, array );
+        };
+    var highest = 20;//Array.max(teamWins);
+
+    teamWins.forEach(function(tws){
+    	highest = highest>Math.abs(tws.wins) ? highest : Math.abs(tws.wins);
+    });
+
+    var rects = svg.selectAll("rect")
+        .data(teamWins, function(d){
+        	return d.team.names;
+        });
+    rects.enter()
+        .append("rect")
+        .attr("x",function(d,i){
+            return i*(w/teamWins.length);
+        })
+        .attr("y", function(d){
+            if(d.wins<0){
+                return bh;
+            }
+            else {
+                return Math.floor(bh - bh/highest*d.wins);
+            }
+        })
+        .attr("width", function(d,i){
+            return (w/teamWins.length) - barpadd
+        })
+        .attr("height", function(d){
+            return Math.floor(bh/highest*Math.abs(d.wins));
+        })
+        .attr("class",function(d){
+        	return d.wins>0 ? 'positive' : 'negative';
+        });
+    rects.transition().duration(800).attr("y", function(d){
+            if(d.wins<0){
+                return bh;
+            }
+            else {
+                return Math.floor(bh - bh/highest*d.wins);
+            }
+        })
+    	.attr("height", function(d){
+            return Math.floor(bh/highest*Math.abs(d.wins));
+        })
+        .attr("x",function(d,i){
+            return i*(w/teamWins.length);
+        })
+        .attr("class",function(d){
+        	return d.wins>0 ? 'positive' : 'negative';
+        });
 }
