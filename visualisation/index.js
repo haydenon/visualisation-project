@@ -200,9 +200,10 @@ function redraw(){
 
 	//now draw
 	var barpad = 1;
-	var imgh = h/4
-	var img w = w/tws
 	var imgpad = 3;
+	var imgh = h/4
+	var imgw = w/teamWins.length - 2 * imgpad;
+	var imgh = imgh<imgw ? imgh : imgw;
 	var bh = (h-imgh)/2
 	var mh = (h-imgh)/2 + imgh;
 
@@ -269,10 +270,10 @@ function redraw(){
             return 0;
         })
         .attr("width",function(d,i){
-            return 50;
+            return imgh;
         })
         .attr("height",function(d,i){
-            return 50;
+            return imgh;
         })
         .attr("xlink:href", function(d){
         	return 'images/'+d.team.names+'.png';
