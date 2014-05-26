@@ -17,8 +17,20 @@
         <header>
             <select>
             </select>
-            <input type="checkbox" name="vehicle" value="count"/>Sort By Country
-             <input type="range" name="points" min="1" max="10">
+            <input id="byCountry" type="checkbox" value="count"/>
+            <label for="byCountry" id="by-country-label">By Country</label>
+            <input id="accumulative" type="checkbox" value="count"/>
+            <label for="accumulative" id="accumulative-label">Accumulative</label>
+            <input id="years" type="range" name="points" min="0" max="5" value="0" oninput="yearUpdate(value)"/>
+            <output for="years" id="years-label">2008</output>
+            <script>
+            function yearUpdate(year) {
+
+              document.querySelector('#years-label').value = 2008+parseInt(year);
+
+            }
+            </script>
+            <!-- <label id="years-label" for="years"></label> -->
         </header>
         <script type="text/javascript" src="index.js">
         </script>

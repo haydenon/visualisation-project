@@ -22,8 +22,14 @@ opt.selectAll("option")
 	});
 opt.on("change", change);
 
-countrySort = d3.select("body").select("input");
+countrySort = d3.select("body").select("input#byCountry");
 countrySort.on("change",change);
+
+accumulative = d3.select("body").select("input#accumulative");
+accumulative.on("change",change);
+
+yearsRange = d3.select("body").select("input#years");
+yearsRange.on("change",change);
 
 
 var aus = {};
@@ -164,6 +170,12 @@ function getTeamToResults(d){
 	});
 }
 
+function matchesToYear(y){
+	return function(element){
+		return element.year <= y;
+	};
+}
+
 function matchesFromYear(y){
 	return function(element){
 		return element.year == y;
@@ -183,15 +195,16 @@ function change(){
 }
 
 function redraw(){
-
-	var year = opt.property("value");
+	var year = parseInt(yearsRange.property("value"))+2008;
+	var accum = accumulative.property('checked');
+	console.log(accum);
 		teamWins = [];
 		teams.teams.forEach(function(t){
 			var hm = [];
 			var am = [];
-			if(year=="All"){
-				hm = t.homeMatches;
-				am = t.awayMatches;
+			if(accum){
+				hm = t.homeMatches.filter(matchesToYear(year));
+				am = t.awayMatches.filter(matchesToYear(year));
 			}
 			else{
 				hm = t.homeMatches.filter(matchesFromYear(year));
@@ -221,7 +234,7 @@ function redraw(){
 	var bh = (h-imgh)/2
 	var mh = (h-imgh)/2 + imgh;
 
-    var highest = 0;//Array.max(teamWins);
+    var highest = 0;
 
     teamWins.forEach(function(tws){
     	highest = highest>Math.abs(tws.num) ? highest : Math.abs(tws.num);
