@@ -76,7 +76,7 @@ function createTeams(){
 }
 
 var dataset;
-d3.csv("data/combined.csv", function(d) {
+d3.csv("data/final.csv", function(d) {
 	dataset=setupData(d);
 	change();
 });
