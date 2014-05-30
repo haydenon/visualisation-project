@@ -4,25 +4,31 @@
         <meta charset="utf-8">
         <title>D3 Test</title>
         <script type="text/javascript" src="d3/d3.js"></script>
-        <style type="text/css">
-            rect.positive {
-                fill:green;
-            }
-            rect.negative{
-                fill:red;
-            }
-        </style>
+        <link rel="stylesheet" type="text/css" href="styles.css"/>
     </head>
     <body>
         <header>
-            <select>
-            </select>
             <input id="byCountry" type="checkbox" value="count"/>
             <label for="byCountry" id="by-country-label">By Country</label>
+
             <input id="accumulative" type="checkbox" value="count"/>
             <label for="accumulative" id="accumulative-label">Accumulative</label>
+
             <input id="years" type="range" name="points" min="0" max="5" value="0" oninput="yearUpdate(value)"/>
             <output for="years" id="years-label">2008</output>
+
+            <input id='net' type="radio" name="net" value="net">
+            <label for="net" id="net-label">Net</label>
+            <input id='total' type="radio" name="net" value="total">
+            <label for="total" id="total-label">Total</label>
+
+            <input id="detailed" type="checkbox" value="count"/>
+            <label for="detailed" id="detailed-label">Detailed</label>
+
+            <input id='wins' type="radio" name="wins" value="wins">
+            <label for="wins" id="wins-label">Wins</label>
+            <input id='goals' type="radio" name="wins" value="goals">
+            <label for="goals" id="goals-label">Goals</label>
             <script>
             function yearUpdate(year) {
 

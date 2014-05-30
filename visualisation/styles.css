@@ -1,0 +1,37 @@
+rect.positive.gen-one {
+    fill:green;
+}
+rect.positive.home-one {
+    fill:#5CD65C;
+}
+rect.positive.over-one {
+    fill:#003300;
+}
+rect.negative.gen-one{
+    fill:#E60000;
+}
+rect.negative.over-one{
+    fill:#660000;
+}
+rect.negative.home-one{
+    fill:#FF3333;
+}
+rect.positive.gen-two {
+    fill:green;
+}
+rect.positive.home-two {
+    fill:#5CD65C;
+}
+rect.positive.over-two {
+    fill:#003300;
+}
+rect.negative.gen-two{
+    fill:#E60000;
+}
+rect.negative.over-two{
+    fill:#660000;
+}
+rect.negative.home-two{
+    fill:#FF3333;
+}
+        

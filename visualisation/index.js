@@ -11,17 +11,6 @@ window.onresize = function(event) {
 };
 var aniDur = 800;
 
-var years = [2008,2009,2010,2011,2012,2013,'All']
-var opt = d3.select("body").select("select");
-opt.selectAll("option")
-	.data(years)
-	.enter()
-	.append("option")
-	.text(function(d){
-		return d;
-	});
-opt.on("change", change);
-
 countrySort = d3.select("body").select("input#byCountry");
 countrySort.on("change",change);
 
@@ -30,6 +19,19 @@ accumulative.on("change",change);
 
 yearsRange = d3.select("body").select("input#years");
 yearsRange.on("change",change);
+
+net = d3.select("body").select("input#net");
+net.on("change",change);
+total = d3.select("body").select("input#total");
+total.on("change",change);
+
+detailedBox = d3.select("body").select("input#detailed");
+detailedBox.on("change",change);
+
+wins = d3.select("body").select("input#wins");
+wins.on("change",change);
+goalsTog = d3.select("body").select("input#goals");
+goalsTog.on("change",change);
 
 
 var aus = {};
@@ -139,6 +141,8 @@ function getMatches(d, venues){
 			homeScore = parseInt(score[0]);
 			awayScore = parseInt(score[1]);
 		}
+		var homePlace = parseInt(match['Home Placement']);
+		var awayPlace = parseInt(match['Away Placement']);
 		var homeWon = homeScore>awayScore;
 		var matchOb = {
 			year: year,
@@ -151,7 +155,9 @@ function getMatches(d, venues){
 			draw: draw,
 			homeScore: homeScore,
 			awayScore: awayScore,
-			homeWon: homeWon
+			homeWon: homeWon,
+			homePlace: homePlace,
+			awayPlace: awayPlace
 		};
 		matches.push(matchOb);
 		yearMatches[year].push(matchOb);
@@ -170,15 +176,15 @@ function getTeamToResults(d){
 	});
 }
 
-function matchesToYear(y){
+function matchesToYear(y,r){
 	return function(element){
-		return element.year <= y;
+		return element.year <= y && element.round<=r;
 	};
 }
 
-function matchesFromYear(y){
+function matchesFromYear(y,r){
 	return function(element){
-		return element.year == y;
+		return element.year == y && element.round<=r;
 	};
 }
 
@@ -194,107 +200,310 @@ function change(){
 	redraw();
 }
 
-function redraw(){
+function teamPosCompare(a,b){
+	if(countrySort.property('checked') && a.team.country != b.team.country){
+		return a.team.country == aus ? -1 : 1;
+	}
+	if((a.place-b.place)!=0){
+		return a.place - b.place;
+	}
+	if(a.points != b.points){
+		return a.points - b.points;	
+	}
+    var difgp = (a.totfor()/a.totag())*100.0 - (b.totfor()/b.totag())*100.0;
+    if(difgp!=0){
+    	return difgp;
+    }
+    return (a.totfor() - a.totag()) - (b.totfor() - b.totag());
+}
+
+function getValues(){
 	var year = parseInt(yearsRange.property("value"))+2008;
 	var accum = accumulative.property('checked');
-	console.log(accum);
-		teamWins = [];
-		teams.teams.forEach(function(t){
-			var hm = [];
-			var am = [];
-			if(accum){
-				hm = t.homeMatches.filter(matchesToYear(year));
-				am = t.awayMatches.filter(matchesToYear(year));
+	var round = 17
+	matches = dataset.matches.matches;
+	if(accum){
+		matches = matches.filter(matchesToYear(year,round));
+	}
+	else {
+		matches = matches.filter(matchesFromYear(year,round));
+	}
+
+	var teamPlace = {};
+	teams.teams.forEach(function(t){
+		var obData = {
+			team: t,
+			points: 0,
+			homewins: 0, awaywins: 0, overwins: 0,
+			homeloses: 0, awayloses: 0, overloses: 0,
+			homefor: 0, homeag: 0,
+			awayfor: 0, awayag: 0,
+			overfor: 0, overag: 0,
+			place: 0
+		}
+		obData.totwins = function(){ return this.homewins+this.awaywins+this.overwins; }
+		obData.totloses = function(){ return this.homeloses+this.awayloses+this.overloses; }
+		obData.totfor = function(){ return this.homefor+this.awayfor+this.overfor; }
+		obData.totag = function(){ return this.homeag+this.awayag+this.overag; }
+		teamPlace[t.names] = obData;
+	});
+
+
+	matches.forEach(function(m){
+		over = m.homeTeam.country != m.awayTeam.country;
+		if(m.draw){
+			teamPlace[m.homeTeam.names].points+=1;
+			teamPlace[m.awayTeam.names].points+=1;
+		}
+		else {
+			if(m.homeWon){
+				teamPlace[m.homeTeam.names].points+=2;
+				teamPlace[m.homeTeam.names].homewins+=1;
+				if(over) teamPlace[m.awayTeam.names].overloses+=1;
+				else teamPlace[m.awayTeam.names].awayloses+=1;
+			}
+			else {
+				teamPlace[m.awayTeam.names].points+=2;
+				teamPlace[m.homeTeam.names].homeloses+=1;
+				if(over) teamPlace[m.awayTeam.names].overwins+=1;
+				else teamPlace[m.awayTeam.names].awaywins+=1;
+			}
+		}
+
+		teamPlace[m.homeTeam.names].homefor+=m.homeScore;
+		teamPlace[m.homeTeam.names].homeag+=m.awayScore;
+		if(over){
+			teamPlace[m.awayTeam.names].overfor+=m.awayScore;
+			teamPlace[m.awayTeam.names].overag+=m.homeScore;
+		}
+		else{
+			teamPlace[m.awayTeam.names].awayfor+=m.awayScore;
+			teamPlace[m.awayTeam.names].awayag+=m.homeScore;
+		}
+	});
+
+	if(round>14 && accum!=true){ //GETS FINAL POSITIONING
+		finals = matches.filter(function(m){
+			return m.round>14;
+		});
+		finals.forEach(function(f){
+			teamPlace[f.homeTeam.names].place = f.homePlace;
+			teamPlace[f.awayTeam.names].place = f.awayPlace;
+		});
+	}
+
+	teamOrder = [];
+	teams.teams.forEach(function(t){
+		teamPlacement = teamPlace[t.names];
+	// 	teamPlacement.num = teamPlacement.totwins() - teamPlacement.totloses();
+	// 	teamPlacement.values = getPointWinValues(teamPlacement,false);
+		teamOrder.push(teamPlacement);
+	});
+	teamOrder.sort(teamPosCompare);
+	var teamData = getPointWinValues(teamOrder,teamPlace);
+	return teamData;
+}
+
+function getPointWinValues(to,tp){
+	var net = !Boolean(total.property("checked"));
+	var detailed = detailedBox.property('checked');
+	var goals = Boolean(goalsTog.property('checked'));
+	var gensetone = []; var gensettwo = [];
+	var homesetone = []; var homesettwo = [];
+	var oversetone = []; var oversettwo = [];
+	var tm = [];
+	to.forEach(function(t,i){
+		tm.push(t.team);
+		tplace = tp[t.team.names];
+		if(net){
+			if(!detailed){
+				var totval = goals ? tplace.totfor() - tplace.totag() : tplace.totwins()-tplace.totloses();
+				gensetone.push({team: t.team, num: totval, i: i});
+			}
+			else {
+				var homeval = goals ? tplace.homefor - tplace.homeag : tplace.homewins - tplace.homeloses;
+				var generalval = goals ? tplace.awayfor - tplace.awayag : tplace.awaywins - tplace.awayloses;
+				var overval = goals ? tplace.overfor - tplace.overag : tplace.overwins - tplace.overloses;
+				gensetone.push({team: t.team, num: generalval, i: i});
+				homesetone.push({team: t.team, num: homeval, i: i});
+				oversetone.push({team: t.team, num: overval, i: i});
+			}
+		}
+		else {
+			if(!detailed){
+				var totpval = goals ? tplace.totfor(): tplace.totwins();
+				var totnval = goals ? -tplace.totag() : -tplace.totloses();
+				gensetone.push({team: t.team, num: totpval, i: i});
+				gensettwo.push({team: t.team, num: totnval, i: i});
 			}
 			else{
-				hm = t.homeMatches.filter(matchesFromYear(year));
-				am = t.awayMatches.filter(matchesFromYear(year));
+				var homepval = goals ? tplace.homefor : tplace.homewins;
+				var generalpval = goals ? tplace.awayfor : tplace.awaywins;
+				var overpval = goals ? tplace.overfor : tplace.overwins;
+				var homenval = goals ? -tplace.homeag : -tplace.homeloses;
+				var generalnval = goals ? -tplace.awayag : -tplace.awayloses;
+				var overnval = goals ? -tplace.overag : -tplace.overloses;
+				gensetone.push({team: t.team, num: generalpval, i: i});
+				homesetone.push({team: t.team, num: homepval, i: i});
+				oversetone.push({team: t.team, num: overpval, i: i});
+				gensettwo.push({team: t.team, num: generalnval, i: i});
+				homesettwo.push({team: t.team, num: homenval, i: i});
+				oversettwo.push({team: t.team, num: overnval, i: i});
 			}
-			var wins = (hm.filter(winMatch(true)).length + am.filter(winMatch(false)).length);
-			var loses = (hm.length+am.length)-wins;
-			var tw = {
-				num: wins - loses,
-				team: t
-			};
-			teamWins.push(tw);
-		});
-		teamWins.sort(function(a,b){
-			if(countrySort.property('checked')&& a.team.country != b.team.country){
-				return a.team.country == aus ? -1 : 1;
-			}
-			return a.num - b.num
-		});
+		}
+	})
+	
+	return {
+		teams: tm,
+		length: to.length,
+		gensetone: gensetone,
+		homesetone: homesetone,
+		oversetone: oversetone,
+		gensettwo: gensettwo,
+		homesettwo: homesettwo,
+		oversettwo: oversettwo,
+	};
+}
+
+function redraw(){
+	teamData = getValues();
 
 	//now draw
 	var barpad = 1;
 	var imgpad = 3;
 	var imgh = h/4
-	var imgw = w/teamWins.length - 2 * imgpad;
+	var imgw = w/teamData.length - 2 * imgpad;
 	var imgh = imgh<imgw ? imgh : imgw;
 	var bh = (h-imgh)/2
 	var mh = (h-imgh)/2 + imgh;
 
     var highest = 0;
 
-    teamWins.forEach(function(tws){
-    	highest = highest>Math.abs(tws.num) ? highest : Math.abs(tws.num);
-    });
+    var posy = Array.apply(null, new Array(teamData.length)).map(Number.prototype.valueOf,0);
+    var negy = Array.apply(null, new Array(teamData.length)).map(Number.prototype.valueOf,0);
 
-    var rects = svg.selectAll("rect")
-        .data(teamWins, function(d){
-        	return d.team.names;
-        });
-    rects.enter()
-        .append("rect")
-        .attr("x",function(d,i){
-            return i*(w/teamWins.length);
-        })
-        .attr("y", function(d){
-            if(d.num<0){
-                return mh;
-            }
-            else {
-                return Math.floor(mh - bh/highest*d.num);
-            }
-        })
-        .attr("width", function(d,i){
-            return (w/teamWins.length) - barpad
-        })
-        .attr("height", function(d){
-            return Math.floor(bh/highest*Math.abs(d.num));
-        })
-        .attr("class",function(d){
-        	return d.num>0 ? 'positive' : 'negative';
-        });
-    rects.transition().duration(aniDur).attr("y", function(d){
-            if(d.num<0){
-                return mh;
-            }
-            else {
-                return Math.floor(mh - bh/highest*d.num);
-            }
-        })
-    	.attr("height", function(d){
-            return Math.floor(bh/highest*Math.abs(d.num));
-        })
-        .attr("x",function(d,i){
-            return i*(w/teamWins.length);
-        })
-        .attr("width", function(d,i){
-            return (w/teamWins.length) - barpad
-        })
-        .attr("class",function(d){
-        	return d.num>0 ? 'positive' : 'negative';
-        });
+    var genonevals = teamData.gensetone;
+    var homeonevals = teamData.homesetone;
+    var overonevals = teamData.oversetone;
+    var gentwovals = teamData.gensettwo;
+    var hometwovals = teamData.homesettwo;
+    var overtwovals = teamData.oversettwo;
 
+	genonevals.forEach(function(t){if(t.num>0)posy[t.i]+=t.num; else negy[t.i]+=t.num});	
+	homeonevals.forEach(function(t){if(t.num>0)posy[t.i]+=t.num; else negy[t.i]+=t.num});
+	overonevals.forEach(function(t){if(t.num>0)posy[t.i]+=t.num; else negy[t.i]+=t.num});
+
+    for(var i = 0; i<teamData.length; i++){
+    	highest = highest > posy[i] ? highest : posy[i];
+    	highest = highest > Math.abs(negy[i]) ? highest : Math.abs(negy[i]);
+    }
+
+    posy = Array.apply(null, new Array(teamData.length)).map(Number.prototype.valueOf,0);
+    negy = Array.apply(null, new Array(teamData.length)).map(Number.prototype.valueOf,0);
+
+    var homeone = svg.selectAll("rect.home-one")
+    	.data(homeonevals, function(d){return d.team.names+".home-one"});
+    if(homeonevals.length == 0)
+    	homeone.exit().remove();
+    else
+    	teamRectSettings(homeone,"home-one",posy,negy,mh,bh,barpad,highest);
+
+    var genone = svg.selectAll("rect.gen-one")
+    	.data(genonevals, function(d){return d.team.names+".gen-one"});
+    if(genonevals.length == 0)
+    	genone.exit().remove();
+    else
+    	teamRectSettings(genone,"gen-one",posy,negy,mh,bh,barpad,highest);
+
+    var overone = svg.selectAll("rect.over-one")
+    	.data(overonevals, function(d){return d.team.names+".over-one"});
+    if(overonevals.length == 0)
+    	overone.exit().remove();
+    else
+    	teamRectSettings(overone,"over-one",posy,negy,mh,bh,barpad,highest);
+
+    var hometwo = svg.selectAll("rect.home-two")
+    	.data(hometwovals, function(d){return d.team.names+".home-two"});
+    if(hometwovals.length == 0){
+    	console.log("here");
+    	hometwo.exit().remove();
+    }
+    else
+    	teamRectSettings(hometwo,"home-two",posy,negy,mh,bh,barpad,highest);
+
+    var gentwo = svg.selectAll("rect.gen-two")
+    	.data(gentwovals, function(d){return d.team.names+".gen-two"});
+    if(gentwovals.length == 0)
+    	gentwo.exit().remove();
+    else
+    	teamRectSettings(gentwo,"gen-two",posy,negy,mh,bh,barpad,highest);
+
+    var overtwo = svg.selectAll("rect.over-two")
+    	.data(overtwovals, function(d){return d.team.names+".over-two"});
+    if(overtwovals.length == 0)
+    	overtwo.exit().remove();
+    else
+    	teamRectSettings(overtwo,"over-two",posy,negy,mh,bh,barpad,highest);
+   		
+
+    // var rects = svg.selectAll("rect")
+    //     .data(teamData, function(d){
+    //     	return d.team.names;
+    //     });
+    // rects.enter()
+    //     .append("rect")
+    //     .attr("x",function(d,i){
+    //         return i*(w/teamData.length);
+    //     })
+    //     .attr("y", function(d){
+    //         if(d.num<0){
+    //             return mh;
+    //         }
+    //         else {
+    //             return Math.floor(mh - bh/highest*d.num);
+    //         }
+    //     })
+    //     .attr("width", function(d,i){
+    //         return (w/teamData.length) - barpad
+    //     })
+    //     .attr("height", function(d){
+    //     	var height = Math.floor(bh/highest*Math.abs(d.num))
+    //         return height;
+    //     })
+    //     .attr("class",function(d){
+    //     	return d.num>0 ? 'positive' : 'negative';
+    //     });
+    // rects.transition()
+    // 	.duration(aniDur).attr("y", function(d){
+    //         if(d.num<0){
+    //             return mh;
+    //         }
+    //         else {
+    //             return Math.floor(mh - bh/highest*d.num);
+    //         }
+    //     })
+    // 	.attr("height", function(d){
+    //         return Math.floor(bh/highest*Math.abs(d.num));
+    //     })
+    //     .attr("x",function(d,i){
+    //         return i*(w/teamData.length);
+    //     })
+    //     .attr("width", function(d,i){
+    //         return (w/teamData.length) - barpad
+    //     })
+    //     .attr("class",function(d){
+    //     	return d.num>0 ? 'positive' : 'negative';
+    //     });
+
+	//DRAW IMAGES
     var images = svg.selectAll("image")
-    	.data(teamWins, function(d){
-        	return d.team.names;
+    	.data(teamData.teams, function(d){
+        	return d.names;
         });
 	images.enter()
 		.append("image")
 		.attr("x",function(d,i){
-            return i*(w/teamWins.length);
+            return i*(w/teamData.length);
         })
         .attr("y",function(d){
             return 0;
@@ -306,14 +515,49 @@ function redraw(){
             return imgh;
         })
         .attr("xlink:href", function(d){
-        	return 'images/'+d.team.names+'.png';
+        	return 'images/'+d.names+'.png';
         });
     images.transition()
     	.duration(aniDur)
         .attr("x",function(d,i){
-            return i*(w/teamWins.length);
+            return i*(w/teamData.length);
         })
         .attr("width",function(d,i){
             return imgh;
         });
+}
+
+function teamRectSettings(s,type,posy,negy,mh,bh,barpad,highest){
+   	s.enter()
+   		.append("rect")
+   		.attr("class",type);
+    s.transition()
+    	.duration(aniDur)
+    	.attr("y", function(d){
+        	var i = d.i;
+            if(d.num<0){
+                return mh + negy[i];
+            }
+            else {
+                return mh - bh/highest*d.num - posy[i];
+            }
+        })
+    	.attr("height", function(d){
+        	var i = d.i;
+            var height =  bh/highest*Math.abs(d.num);
+        	if(d.num<0) negy[i] += height; 
+    		else posy[i] += height;
+    		return height;
+        })
+        .attr("x",function(d){
+        	var i = d.i;
+            return i*(w/posy.length);
+        })
+        .attr("width", function(d){
+            return (w/posy.length) - barpad
+        })
+        .attr("class", function(d){
+        	return type+' '+(d.num>0 ? 'positive' : 'negative');
+        });
+    s.exit().remove();
 }
