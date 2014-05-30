@@ -8,32 +8,60 @@
     </head>
     <body>
         <header>
-            <input id="byCountry" type="checkbox" value="count"/>
-            <label for="byCountry" id="by-country-label">By Country</label>
+            <span style="float:left;">
+                <select id="mode">
+                    <option>Teams</option>
+                    <option>Venues</option>
+                </select>
 
-            <input id="accumulative" type="checkbox" value="count"/>
-            <label for="accumulative" id="accumulative-label">Accumulative</label>
+                <input id="byCountry" type="checkbox" value="count"/>
+                <label for="byCountry" id="by-country-label">By Country</label>
 
-            <input id="years" type="range" name="points" min="0" max="5" value="0" oninput="yearUpdate(value)"/>
-            <output for="years" id="years-label">2008</output>
+                <input id="accumulative" type="checkbox" value="count"/>
+                <label for="accumulative" id="accumulative-label">Accumulative</label>
+                <br/>
+                <select id="chooser">
+                </select>
+            </span>
+            <span style="float:left;">
+                <table id="sliders">
+                    <tr><td>
+                        <input id="years" type="range" name="points" min="0" max="5" value="0" oninput="yearUpdate(value)"/>
+                        <output for="years" id="years-label">2008</output>
+                    </td></tr>
+                    <tr><td>
+                        <input id="round" type="range" name="points" min="1" max="17" value="17" oninput="roundUpdate(value)"/>
+                        <output for="round" id="round-label">Finals</output>
+                    </td></tr>
+                </table>
+            </span>
+            <span style="float:left;">
+                <input id='net' type="radio" name="net" value="net">
+                <label for="net" id="net-label">Net</label>
+                <input id='total' type="radio" name="net" value="total">
+                <label for="total" id="total-label">Total</label>
 
-            <input id='net' type="radio" name="net" value="net">
-            <label for="net" id="net-label">Net</label>
-            <input id='total' type="radio" name="net" value="total">
-            <label for="total" id="total-label">Total</label>
+                <input id="detailed" type="checkbox" value="count"/>
+                <label for="detailed" id="detailed-label">Detailed</label>
 
-            <input id="detailed" type="checkbox" value="count"/>
-            <label for="detailed" id="detailed-label">Detailed</label>
-
-            <input id='wins' type="radio" name="wins" value="wins">
-            <label for="wins" id="wins-label">Wins</label>
-            <input id='goals' type="radio" name="wins" value="goals">
-            <label for="goals" id="goals-label">Goals</label>
+                <input id='wins' type="radio" name="wins" value="wins">
+                <label for="wins" id="wins-label">Wins</label>
+                <input id='goals' type="radio" name="wins" value="goals">
+                <label for="goals" id="goals-label">Goals</label>
+            </span>
             <script>
             function yearUpdate(year) {
-
-              document.querySelector('#years-label').value = 2008+parseInt(year);
-
+                document.querySelector('#years-label').value = 2008+parseInt(year);
+            }
+            function roundUpdate(round) {
+                var round = parseInt(round);
+                if(round==15)
+                    round = "Semi-Finals";
+                if(round==16)
+                    round = "Pre-Finals";
+                if(round==17)
+                    round = "Finals";
+                document.querySelector('#round-label').value = round;
             }
             </script>
             <!-- <label id="years-label" for="years"></label> -->
