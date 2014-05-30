@@ -1,14 +1,20 @@
+var header = d3.select("body").select("header");
+
 var wd = window.innerWidth-40;
-var h = 500;
+var h = window.innerHeight - header.attr("height") - 40;
 var svg = d3.select("body")
 	.append("svg")
 	.attr("width", wd)
-	.attr("height", h);
+	.attr("height", h)
+	.attr("class","canvas");
 window.onresize = function(event) {
+	h = window.innerHeight - header.attr("height")-40;
     wd = window.innerWidth-40;
     svg.attr("width",wd)
+    svg.attr("height",h)
     change();
 };
+
 var aniDur = 800;
 
 mode = d3.select("body").select("select#mode");
@@ -535,6 +541,7 @@ function redraw(){
 		// },(wd/10)*1.5);
 		drawTeamData(teamData,(wd/teamData.length)*1.5);
 		drawHomeTeam(teams.teamMap[rivalTeam], wd/10,"Rivals Of:");
+		drawTeamKey(wd/10);
 	}
 	
 }
@@ -624,6 +631,9 @@ function drawTeamData(teamData,x){
     svg.selectAll(".home-team")
     	.remove();
 
+    svg.selectAll(".team-key")
+    	.remove();
+
     posy = Array.apply(null, new Array(teamData.length)).map(Number.prototype.valueOf,0);
     negy = Array.apply(null, new Array(teamData.length)).map(Number.prototype.valueOf,0);
 
@@ -697,6 +707,9 @@ function drawTeamData(teamData,x){
         .attr("x",function(d,i){
             return cd.x + i*(cd.w/teamData.length);
         })
+        .attr("height",function(d,i){
+            return cd.ih;
+        })
         .attr("width",function(d,i){
             return cd.ih;
         });
@@ -707,14 +720,14 @@ function drawHomeTeam(homeTeam,width,text){
 	hometext = svg.append("text");
 	hometext.text(text)
 		.attr("x",width/4)
-		.attr("y",width-5)
+		.attr("y",width/2-5)
         .attr("class","home-team");
 
 	homeimage = svg.selectAll("image.home-team")
 		.data([homeTeam.names]);
 	homeimage.enter()
 		.append("image")
-		.attr("y",width)
+		.attr("y",width/2)
 		.attr("x",width/4)
         .attr("width",width)
         .attr("height",width)
@@ -722,4 +735,34 @@ function drawHomeTeam(homeTeam,width,text){
         	return 'images/'+d+'.png';
         })
         .attr("class","home-team");
+}
+
+function drawTeamKey(width){
+	svg.append("text")
+		.text("Scored by team")
+		.attr("x",width/5 + 42)
+		.attr("y",width/2+width+15)
+        .attr("class","team-key")
+        .attr("style","font-size:14px;");
+
+
+	svg.append("text")
+		.text("Scored by rival")
+		.attr("x",width/5 + 42)
+		.attr("y",width/2+width+40)
+        .attr("class","team-key")
+        .attr("style","font-size:14px;");
+
+	svg.append("rect")
+		.attr("y",width/2+width)
+		.attr("x",width/5)
+        .attr("width",40)
+        .attr("height",20)
+        .attr("class","team-key positive");
+    svg.append("rect")
+		.attr("y",width/2+width+25)
+		.attr("x",width/5)
+        .attr("width",40)
+        .attr("height",20)
+        .attr("class","team-key negative");
 }

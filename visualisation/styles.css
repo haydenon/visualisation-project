@@ -34,4 +34,10 @@ rect.negative.over-two{
 rect.negative.home-two{
     fill:#FF3333;
 }
+rect.negative{
+    fill:#E60000;
+}
+rect.positive{
+    fill:green;
+}
         

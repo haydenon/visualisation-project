@@ -7,7 +7,7 @@
         <link rel="stylesheet" type="text/css" href="styles.css"/>
     </head>
     <body>
-        <header>
+        <header height="60">
             <span style="float:left;">
                 <select id="mode">
                     <option>Teams</option>
@@ -48,6 +48,19 @@
                 <label for="wins" id="wins-label">Wins</label>
                 <input id='goals' type="radio" name="wins" value="goals">
                 <label for="goals" id="goals-label">Goals</label>
+            </span>
+            <span style="float:left; margin-left:10px;" id="key">
+                <svg class="canvas" height="55" width="230">
+                    <rect x="0" y="0" width="20" height="10" class="positive home-one"></rect>
+                    <rect x="20" y="0" width="20" height="10" class="negative home-one"></rect>
+                    <text x="50" y="10" style="font-size:11px;">Home values (light colours)</text>
+                    <rect x="0" y="12" width="20" height="10" class="positive gen-one"></rect>
+                    <rect x="20" y="12" width="20" height="10" class="negative gen-one"></rect>
+                    <text x="50" y="22" style="font-size:11px;">Away values (normal colours)</text>
+                    <rect x="0" y="24" width="20" height="10" class="positive over-one"></rect>
+                    <rect x="20" y="24" width="20" height="10" class="negative over-one"></rect>
+                    <text x="50" y="34" style="font-size:11px;">Overseas values (dark colours)</text>
+                </svg>
             </span>
             <script>
             function yearUpdate(year) {
