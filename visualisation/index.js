@@ -217,10 +217,14 @@ function winMatch(home){
 	};
 }
 
+var prevMode = "Teams";
 var currMode;
 
 function change(){
 	currMode = mode.property("value");
+	if(currMode!=prevMode){
+		chooser.property("selectedIndex",0);
+	}
 	if(currMode=="Venues"){
 		var opts = chooser.selectAll("option")
 			.data(dataset.venues.venueList);
@@ -239,6 +243,7 @@ function change(){
 		opts.text(function(d){return d.names;})
 		opts.exit().remove();
 	}
+	prevMode = currMode;
 	redraw();
 }
 
@@ -596,13 +601,13 @@ function teamTextSettings(s,posy,negy,cd,highest){
         })
         .text(function(d){
         	var height =  cd.bh/highest*Math.abs(d.num);
-        	if(height<12) return "";
+        	if(height<10) return "";
         	return d.num
         })
         .attr("x",function(d){
         	var width = (cd.w/posy.length) - cd.bp;
         	var i = d.i;
-            return cd.x + i*(cd.w/posy.length) + width/2;
+            return cd.x + i*(cd.w/posy.length) + width/2 -3;
         });
 }
 
