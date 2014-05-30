@@ -40,4 +40,9 @@ rect.negative{
 rect.positive{
     fill:green;
 }
+text.text-label{
+    fill:white;
+    stroke:none;
+    font-size: 12px;
+}
         

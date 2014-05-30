@@ -581,6 +581,31 @@ function teamRectSettings(s,type,posy,negy,cd,highest){
     s.exit().remove();
 }
 
+function teamTextSettings(s,posy,negy,cd,highest){
+   	s.enter()
+   		.append("text")
+   		.attr("class","text-label")
+   		.attr("y", function(d){
+        	var i = d.i;
+            if(d.num<0){
+                return cd.mh + negy[i]-2;
+            }
+            else {
+                return cd.mh - posy[i]+12;
+            }
+        })
+        .text(function(d){
+        	var height =  cd.bh/highest*Math.abs(d.num);
+        	if(height<12) return "";
+        	return d.num
+        })
+        .attr("x",function(d){
+        	var width = (cd.w/posy.length) - cd.bp;
+        	var i = d.i;
+            return cd.x + i*(cd.w/posy.length) + width/2;
+        });
+}
+
 function drawTeamData(teamData,x){
 	var x = x;
 	var w = wd - x;
@@ -634,6 +659,9 @@ function drawTeamData(teamData,x){
     svg.selectAll(".team-key")
     	.remove();
 
+    svg.selectAll(".text-label")
+    	.remove();
+
     posy = Array.apply(null, new Array(teamData.length)).map(Number.prototype.valueOf,0);
     negy = Array.apply(null, new Array(teamData.length)).map(Number.prototype.valueOf,0);
 
@@ -643,6 +671,9 @@ function drawTeamData(teamData,x){
     	homeone.exit().remove();
     else
     	teamRectSettings(homeone,"home-one",posy,negy,cd,highest);
+    var texthomeone = svg.selectAll("text.text-label.home-one")
+    	.data(homeonevals, function(d){return d.team.names+".home-one"});
+    teamTextSettings(texthomeone,posy,negy,cd,highest)
 
     var genone = svg.selectAll("rect.gen-one")
     	.data(genonevals, function(d){return d.team.names+".gen-one"});
@@ -650,6 +681,9 @@ function drawTeamData(teamData,x){
     	genone.exit().remove();
     else
     	teamRectSettings(genone,"gen-one",posy,negy,cd,highest);
+    var textgenone = svg.selectAll("text.text-label.gen-one")
+    	.data(genonevals, function(d){return d.team.names+".gen-one"});
+    teamTextSettings(textgenone,posy,negy,cd,highest)
 
     var overone = svg.selectAll("rect.over-one")
     	.data(overonevals, function(d){return d.team.names+".over-one"});
@@ -657,6 +691,9 @@ function drawTeamData(teamData,x){
     	overone.exit().remove();
     else
     	teamRectSettings(overone,"over-one",posy,negy,cd,highest);
+    var textoverone = svg.selectAll("text.text-label.over-one")
+    	.data(overonevals, function(d){return d.team.names+".over-one"});
+    teamTextSettings(textoverone,posy,negy,cd,highest)
 
     var hometwo = svg.selectAll("rect.home-two")
     	.data(hometwovals, function(d){return d.team.names+".home-two"});
@@ -665,6 +702,9 @@ function drawTeamData(teamData,x){
     }
     else
     	teamRectSettings(hometwo,"home-two",posy,negy,cd,highest);
+    var texthometwo = svg.selectAll("text.text-label.home-two")
+    	.data(hometwovals, function(d){return d.team.names+".home-two"});
+    teamTextSettings(texthometwo,posy,negy,cd,highest)
 
     var gentwo = svg.selectAll("rect.gen-two")
     	.data(gentwovals, function(d){return d.team.names+".gen-two"});
@@ -672,6 +712,9 @@ function drawTeamData(teamData,x){
     	gentwo.exit().remove();
     else
     	teamRectSettings(gentwo,"gen-two",posy,negy,cd,highest);
+    var textgentwo = svg.selectAll("text.text-label.gen-two")
+    	.data(gentwovals, function(d){return d.team.names+".gen-two"});
+    teamTextSettings(textgentwo,posy,negy,cd,highest)
 
     var overtwo = svg.selectAll("rect.over-two")
     	.data(overtwovals, function(d){return d.team.names+".over-two"});
@@ -679,6 +722,9 @@ function drawTeamData(teamData,x){
     	overtwo.exit().remove();
     else
     	teamRectSettings(overtwo,"over-two",posy,negy,cd,highest);
+    var textovertwo = svg.selectAll("text.text-label.over-two")
+    	.data(overtwovals, function(d){return d.team.names+".over-two"});
+    teamTextSettings(textovertwo,posy,negy,cd,highest)
 
 	//DRAW IMAGES
     var images = svg.selectAll("image")
